@@ -18,15 +18,6 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
           </div>
         </div>
 
-        <div className="text-sm text-gray-500 space-y-1">
-          <p>
-            Current Site: <strong id="currentSite" className="font-medium">-</strong>
-          </p>
-          <p>
-            Your IP: <strong id="clientIP" className="font-medium">-</strong>
-          </p>
-        </div>
-
         <div className="bg-blue-50 p-8 rounded-xl border-l-4 border-blue-600 space-y-4">
           <h3 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
             <span>📊</span> Real-time User Statistics
@@ -85,28 +76,7 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
           </div>
         </div>
       </div>
-
       <script src="/liveuser.js?siteId=official-website"></script>
-      <script>
-        {`
-          // Display current site information
-          document.getElementById('currentSite').textContent = window.location.host;
-
-          // Get IP information via global variable
-          if (window.LiveUserConfig) {
-            setTimeout(() => {
-              fetch('/api/ip')
-                .then(r => r.text())
-                .then(ip => {
-                  document.getElementById('clientIP').textContent = ip;
-                })
-                .catch(() => {
-                  document.getElementById('clientIP').textContent = 'Unknown';
-                });
-            }, 100);
-          }
-        `}
-      </script>
     </Layout>
   );
 };

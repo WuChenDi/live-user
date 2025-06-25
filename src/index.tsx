@@ -30,14 +30,6 @@ interface Env {
 
 const app = new Hono<{ Bindings: Env }>()
 
-// Get real IP
-function getRealIP(c: any): string {
-  return c.req.header('CF-Connecting-IP') ||
-    c.req.header('X-Forwarded-For')?.split(',')[0] ||
-    c.req.header('X-Real-IP') ||
-    'unknown'
-}
-
 // Parse JS configuration
 function parseJSConfig(c: any): JSConfig {
   const query = c.req.query()
@@ -81,186 +73,43 @@ app.get('/', (c) => {
   )
 })
 
-// JavaScript SDK
+// JavaScript SDK initializer
 app.get('/liveuser.js', (c) => {
   console.log('LiveUser JS requested: ', JSON.stringify(c.req.query(), null, 2))
   const config = parseJSConfig(c)
 
+  // Generate a small script to load init-liveuser.js and initialize it
   const jsCode = `
-(function() {
-  window.LiveUserConfig = ${JSON.stringify(config)};
-  
-  const config = window.LiveUserConfig;
-  let ws = null;
-  let reconnectTimer = null;
-  let element = null;
-  let heartbeatTimer = null;
-  const clientId = crypto.randomUUID();
-
-  function log(message, ...args) {
-    if (config.debug) {
-      console.log('[LiveUser]', message, ...args);
-    }
-  }
-
-  function updateDisplay(count) {
-    if (element) {
-      log('Updating DOM with count:', count);
-      element.textContent = 'Online: ' + count + ' users';
-    } else {
-      log('Error: Display element not found for ID:', config.displayElementId);
-    }
-  }
-
-  function setStatus(status) {
-    if (element) {
-      log('Setting status:', status);
-      element.textContent = status;
-    } else {
-      log('Error: Cannot set status, display element not found');
-    }
-  }
-
-  function sendHeartbeat() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      const heartbeatMsg = {
-        type: 'heartbeat',
-        siteId: config.siteId,
-        clientId: clientId,
-        timestamp: Math.floor(Date.now() / 1000)
-      };
-      ws.send(JSON.stringify(heartbeatMsg));
-      log('Sent heartbeat:', heartbeatMsg);
-    }
-  }
-
-  function connect() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      log('WebSocket already open, skipping connect');
-      return;
-    }
-
-    log('Connecting to: ' + config.serverUrl);
-    setStatus('Connecting...');
-
-    const wsUrl = config.serverUrl.replace(/^http/, 'ws') + 'ws?siteId=' + encodeURIComponent(config.siteId) + '&clientId=' + encodeURIComponent(clientId);
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = function() {
-      log('WebSocket connected');
-      setStatus('Connected');
-
-      const joinMsg = {
-        type: 'join',
-        siteId: config.siteId,
-        clientId: clientId
-      };
-      ws.send(JSON.stringify(joinMsg));
-      log('Sent join message:', joinMsg);
-
-      heartbeatTimer = setInterval(sendHeartbeat, 30000);
-    };
-
-    ws.onmessage = function(event) {
-      try {
-        const msg = JSON.parse(event.data);
-        log('Received message:', msg);
-
-        if (msg.type === 'update') {
-          log('Processing update message with count:', msg.count);
-          updateDisplay(msg.count);
-        } else if (msg.type === 'shutdown') {
-          log('Received shutdown message:', msg.message);
-          setStatus(msg.message || 'Server restarting...');
-          ws.close();
-        } else if (msg.type === 'heartbeat') {
-          log('Received heartbeat response');
+    (function() {
+      var config = ${JSON.stringify(config)};
+      var script = document.createElement('script');
+      script.src = '/init-liveuser.js';
+      script.async = true;
+      script.onload = function() {
+        if (window.LiveUser && window.LiveUser.initializeLiveUser) {
+          window.LiveUser.initializeLiveUser(config);
         } else {
-          log('Unknown message type:', msg.type);
+          console.error('LiveUser initialization failed: initializeLiveUser not found');
         }
-      } catch (e) {
-        log('Failed to parse message:', e);
-      }
-    };
-
-    ws.onclose = function(event) {
-      log('WebSocket closed with code:', event.code);
-      setStatus('Disconnected, reconnecting...');
-
-      if (heartbeatTimer) {
-        clearInterval(heartbeatTimer);
-        heartbeatTimer = null;
-      }
-
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
-      }
-      reconnectTimer = setTimeout(function() {
-        log('Attempting to reconnect...');
-        connect();
-      }, config.reconnectDelay);
-    };
-
-    ws.onerror = function(error) {
-      log('WebSocket error:', error);
-      setStatus('Connection error');
-    };
-  }
-
-  function init() {
-    element = document.getElementById(config.displayElementId);
-    if (!element) {
-      log('Display element not found: ' + config.displayElementId);
-      return;
-    }
-
-    log('LiveUser initialized');
-    log('Site ID: ' + config.siteId);
-    log('Client ID: ' + clientId);
-
-    connect();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-
-  window.addEventListener('beforeunload', function() {
-    if (ws) {
-      ws.close();
-      log('WebSocket closed on page unload');
-    }
-    if (reconnectTimer) {
-      clearTimeout(reconnectTimer);
-      log('Cleared reconnect timer');
-    }
-    if (heartbeatTimer) {
-      clearInterval(heartbeatTimer);
-      log('Cleared heartbeat timer');
-    }
-  });
-})();
-`
+      };
+      script.onerror = function() {
+        console.error('Failed to load liveuser.js');
+      };
+      document.head.appendChild(script);
+    })();
+  `
 
   c.header('Content-Type', 'application/javascript; charset=utf-8')
   c.header('Cache-Control', 'no-cache')
   return c.text(jsCode)
 })
 
-// IP query endpoint
-app.get('/api/ip', (c) => {
-  return c.text(getRealIP(c))
-})
-
 // WebSocket route to Durable Object
 app.get('/ws', async (c) => {
   const siteId = c.req.query('siteId') || 'default-site'
   const clientId = c.req.query('clientId') || crypto.randomUUID()
-  const clientIP = getRealIP(c)
 
-  console.log(`New client connected: ${clientIP}, Site: ${siteId}, Client: ${clientId}`)
+  console.log(`New client connected: Site: ${siteId}, Client: ${clientId}`)
 
   // Get Durable Object for the site
   const id = c.env.SITE_MANAGER.idFromName(siteId)
