@@ -1,0 +1,26 @@
+{
+  "name": "live-user",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A Cloudflare Worker for managing live user data",
+  "author": "wudi",
+  "repository": {
+    "type": "http",
+    "url": "https://github.com/WuChenDi/live-user.git"
+  },
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "clean": "bash ./scripts/clean.sh",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.8.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250620.0",
+    "wrangler": "^4.21.2"
+  }
+}
