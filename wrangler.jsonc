@@ -6,8 +6,29 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "MY_KV_NAMESPACE",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
-  }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SITE_MANAGER",
+        "class_name": "SiteManager"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      // "new_classes": ["SiteManager"]
+      "new_sqlite_classes": ["SiteManager"]
+    }
+  ]
 }

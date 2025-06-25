@@ -1,20 +1,5 @@
 import { Hono } from 'hono'
-import { upgradeWebSocket } from 'hono/cloudflare-workers'
 import { HomePage } from './HomePage'
-
-interface Site {
-  id: string;
-  count: number;
-  connections: Set<any>;
-}
-
-interface Message {
-  type: string;
-  siteId?: string;
-  count?: number;
-  timestamp?: number;
-  message?: string;
-}
 
 interface JSConfig {
   /**
@@ -39,8 +24,11 @@ interface JSConfig {
   debug: boolean;
 }
 
-const app = new Hono()
-const sites: Map<string, Site> = new Map();
+interface Env {
+  SITE_MANAGER: DurableObjectNamespace;
+}
+
+const app = new Hono<{ Bindings: Env }>()
 
 // Get real IP
 function getRealIP(c: any): string {
@@ -55,13 +43,11 @@ function parseJSConfig(c: any): JSConfig {
   const query = c.req.query()
   const url = new URL(c.req.url)
 
-  // Determine protocol
   const protocol = url.protocol === 'https:' ? 'wss' : 'ws'
   const defaultServerUrl = `${protocol}://${url.host}/`
 
   let siteId = query.siteId || ''
 
-  // Get siteId from Referer if not provided
   if (!siteId) {
     const referer = c.req.header('Referer')
     if (referer) {
@@ -87,58 +73,11 @@ function parseJSConfig(c: any): JSConfig {
   }
 }
 
-// Broadcast to specific site
-function broadcastToSite(siteId: string, count: number): void {
-  const site = sites.get(siteId)
-  if (!site) return
-
-  const message: Message = {
-    type: 'update',
-    siteId,
-    count,
-    timestamp: Math.floor(Date.now() / 1000),
-  }
-
-  const deadConnections: WebSocket[] = []
-
-  for (const ws of site.connections) {
-    try {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message))
-      } else {
-        deadConnections.push(ws)
-      }
-    } catch (e) {
-      deadConnections.push(ws)
-    }
-  }
-
-  // Clean up dead connections
-  for (const deadWs of deadConnections) {
-    site.connections.delete(deadWs)
-    site.count = Math.max(0, site.count - 1)
-  }
-}
-
-// Get or create site
-function getSite(siteId: string): Site {
-  let site = sites.get(siteId)
-  if (!site) {
-    site = {
-      id: siteId,
-      count: 0,
-      connections: new Set()
-    }
-    sites.set(siteId, site)
-  }
-  return site
-}
-
 // Main page - Demo page
 app.get('/', (c) => {
   const url = new URL(c.req.url).origin
   return c.html(
-    <HomePage url={ url } />
+    <HomePage url={url} />
   )
 })
 
@@ -149,122 +88,157 @@ app.get('/liveuser.js', (c) => {
 
   const jsCode = `
 (function() {
-  // LiveUser Configuration
-  // serverUrl: WebSocket server URL (default: auto-detected)
-  // siteId: Site identifier (default: current domain)
-  // displayElementId: Element ID for display (default: 'liveuser')
-  // reconnectDelay: Reconnect delay in milliseconds (default: 3000)
-  // debug: Debug mode toggle (default: true)
   window.LiveUserConfig = ${JSON.stringify(config)};
   
   const config = window.LiveUserConfig;
   let ws = null;
   let reconnectTimer = null;
   let element = null;
-  
-  function log(message) {
+  let heartbeatTimer = null;
+  const clientId = crypto.randomUUID();
+
+  function log(message, ...args) {
     if (config.debug) {
-      console.log('[LiveUser]', message);
+      console.log('[LiveUser]', message, ...args);
     }
   }
-  
+
   function updateDisplay(count) {
     if (element) {
+      log('Updating DOM with count:', count);
       element.textContent = 'Online: ' + count + ' users';
+    } else {
+      log('Error: Display element not found for ID:', config.displayElementId);
     }
   }
-  
+
   function setStatus(status) {
     if (element) {
+      log('Setting status:', status);
       element.textContent = status;
+    } else {
+      log('Error: Cannot set status, display element not found');
     }
   }
-  
+
+  function sendHeartbeat() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const heartbeatMsg = {
+        type: 'heartbeat',
+        siteId: config.siteId,
+        clientId: clientId,
+        timestamp: Math.floor(Date.now() / 1000)
+      };
+      ws.send(JSON.stringify(heartbeatMsg));
+      log('Sent heartbeat:', heartbeatMsg);
+    }
+  }
+
   function connect() {
     if (ws && ws.readyState === WebSocket.OPEN) {
+      log('WebSocket already open, skipping connect');
       return;
     }
-    
+
     log('Connecting to: ' + config.serverUrl);
     setStatus('Connecting...');
-    
-    const wsUrl = config.serverUrl.replace(/^http/, 'ws') + 'ws?siteId=' + encodeURIComponent(config.siteId);
+
+    const wsUrl = config.serverUrl.replace(/^http/, 'ws') + 'ws?siteId=' + encodeURIComponent(config.siteId) + '&clientId=' + encodeURIComponent(clientId);
     ws = new WebSocket(wsUrl);
-    
+
     ws.onopen = function() {
       log('WebSocket connected');
       setStatus('Connected');
-      
-      // Send join message
+
       const joinMsg = {
         type: 'join',
-        siteId: config.siteId
+        siteId: config.siteId,
+        clientId: clientId
       };
       ws.send(JSON.stringify(joinMsg));
+      log('Sent join message:', joinMsg);
+
+      heartbeatTimer = setInterval(sendHeartbeat, 30000);
     };
-    
+
     ws.onmessage = function(event) {
       try {
         const msg = JSON.parse(event.data);
         log('Received message:', msg);
-        
+
         if (msg.type === 'update') {
+          log('Processing update message with count:', msg.count);
           updateDisplay(msg.count);
         } else if (msg.type === 'shutdown') {
+          log('Received shutdown message:', msg.message);
           setStatus(msg.message || 'Server restarting...');
           ws.close();
+        } else if (msg.type === 'heartbeat') {
+          log('Received heartbeat response');
+        } else {
+          log('Unknown message type:', msg.type);
         }
       } catch (e) {
         log('Failed to parse message:', e);
       }
     };
-    
+
     ws.onclose = function(event) {
-      log('WebSocket closed:', event.code);
+      log('WebSocket closed with code:', event.code);
       setStatus('Disconnected, reconnecting...');
-      
-      // Auto reconnect
+
+      if (heartbeatTimer) {
+        clearInterval(heartbeatTimer);
+        heartbeatTimer = null;
+      }
+
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
       }
       reconnectTimer = setTimeout(function() {
+        log('Attempting to reconnect...');
         connect();
       }, config.reconnectDelay);
     };
-    
+
     ws.onerror = function(error) {
       log('WebSocket error:', error);
       setStatus('Connection error');
     };
   }
-  
+
   function init() {
     element = document.getElementById(config.displayElementId);
     if (!element) {
       log('Display element not found: ' + config.displayElementId);
       return;
     }
-    
+
     log('LiveUser initialized');
     log('Site ID: ' + config.siteId);
-    
+    log('Client ID: ' + clientId);
+
     connect();
   }
-  
-  // Initialize after page load
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-  
-  // Close connection on page unload
+
   window.addEventListener('beforeunload', function() {
     if (ws) {
       ws.close();
+      log('WebSocket closed on page unload');
     }
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
+      log('Cleared reconnect timer');
+    }
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      log('Cleared heartbeat timer');
     }
   });
 })();
@@ -280,99 +254,113 @@ app.get('/api/ip', (c) => {
   return c.text(getRealIP(c))
 })
 
-// WebSocket route
-app.get('/ws', upgradeWebSocket((c) => {
+// WebSocket route to Durable Object
+app.get('/ws', async (c) => {
   const siteId = c.req.query('siteId') || 'default-site'
+  const clientId = c.req.query('clientId') || crypto.randomUUID()
   const clientIP = getRealIP(c)
 
-  console.log(`New client connected: ${clientIP}, Site: ${siteId}`)
+  console.log(`New client connected: ${clientIP}, Site: ${siteId}, Client: ${clientId}`)
 
-  return {
-    /**
-     * link: https://hono.dev/docs/helpers/websocket
-     * onOpen - Currently, Cloudflare Workers does not support it.
-     */
-    // onOpen(event, ws) {
-    //   console.log(`WebSocket opened: ${clientIP}`);
-    // },
+  // Get Durable Object for the site
+  const id = c.env.SITE_MANAGER.idFromName(siteId)
+  const siteManager = c.env.SITE_MANAGER.get(id)
 
-    onMessage(event, ws) {
-      try {
-        const msg: Message = JSON.parse(event.data as string)
-        console.log('Received message:', msg, `from: ${clientIP}`)
+  // Forward WebSocket request to Durable Object
+  const url = new URL(c.req.url)
+  url.pathname = '/ws'
+  url.searchParams.set('clientId', clientId)
+  return siteManager.fetch(url.toString(), c.req.raw)
+})
 
-        if (msg.type === 'join' && msg.siteId) {
-          const newSiteId = msg.siteId.trim()
-
-          // Remove from all sites
-          for (const [id, site] of sites) {
-            if (site.connections.has(ws)) {
-              site.connections.delete(ws)
-              site.count = Math.max(0, site.count - 1)
-              console.log(`Client left site ${id}, remaining: ${site.count}`)
-
-              if (site.count === 0) {
-                sites.delete(id)
-              } else {
-                broadcastToSite(id, site.count)
-              }
-              break
-            }
-          }
-
-          // Join new site
-          const site = getSite(newSiteId)
-          site.connections.add(ws)
-          site.count++
-
-          console.log(`Client joined site ${newSiteId}, total: ${site.count}`)
-          broadcastToSite(newSiteId, site.count)
-        }
-      } catch (e) {
-        console.error('Failed to parse message:', e)
-      }
-    },
-
-    onClose(event, ws) {
-      console.log(`WebSocket closed: ${clientIP}`)
-
-      // Remove from all sites
-      for (const [id, site] of sites) {
-        if (site.connections.has(ws)) {
-          site.connections.delete(ws)
-          site.count = Math.max(0, site.count - 1)
-          console.log(`Client left site ${id}, remaining: ${site.count}`)
-
-          if (site.count === 0) {
-            sites.delete(id)
-          } else {
-            broadcastToSite(id, site.count)
-          }
-          break
-        }
-      }
-    },
-
-    onError(event, ws) {
-      console.error(`WebSocket error: ${clientIP}`, event)
-    },
-  }
-}))
-
-// Status query endpoint
+// Status query endpoint (optional, may need Durable Object integration)
 app.get('/api/status', (c) => {
-  const stats = {
-    totalSites: sites.size,
-    totalConnections: Array.from(sites.values()).reduce((sum, site) => sum + site.count, 0),
-    sites: Array.from(sites.entries()).map(([id, site]) => ({
-      id,
-      count: site.count
-    }))
-  }
-
-  return c.json(stats)
+  return c.json({ message: 'Status endpoint requires Durable Object integration' })
 })
 
 export default {
   fetch: app.fetch,
+}
+
+// Durable Object for managing WebSocket connections
+export class SiteManager {
+  state: DurableObjectState
+  connections: Map<string, WebSocket>
+  count: number
+
+  constructor(state: DurableObjectState) {
+    this.state = state
+    this.connections = new Map()
+    this.count = 0
+  }
+
+  async fetch(request: Request) {
+    const { pathname, searchParams } = new URL(request.url)
+    if (pathname === '/ws') {
+      const clientId = searchParams.get('clientId') || crypto.randomUUID()
+      const pair = new WebSocketPair()
+      this.handleWebSocket(pair[1], clientId)
+      return new Response(null, { status: 101, webSocket: pair[0] })
+    }
+    return new Response('Not found', { status: 404 })
+  }
+
+  handleWebSocket(ws: WebSocket, clientId: string) {
+    ws.accept()
+    this.connections.set(clientId, ws)
+    this.count++
+
+    console.log(`WebSocket connected for client ${clientId}, total: ${this.count}`)
+    this.broadcast({ type: 'update', count: this.count })
+
+    ws.addEventListener('message', async (event) => {
+      try {
+        const msg = JSON.parse(event.data)
+        console.log(`Received message from client ${clientId}:`, msg)
+
+        if (msg.type === 'join' && msg.siteId && msg.clientId) {
+          // Already handled by connection setup
+          this.broadcast({ type: 'update', count: this.count })
+        } else if (msg.type === 'heartbeat' && msg.clientId) {
+          console.log(`Received heartbeat from client ${msg.clientId}`)
+          try {
+            ws.send(JSON.stringify({ type: 'heartbeat', timestamp: Math.floor(Date.now() / 1000) }))
+            console.log(`Sent heartbeat response to client ${msg.clientId}`)
+          } catch (e) {
+            console.error(`Error responding to heartbeat for client ${msg.clientId}:`, e)
+          }
+        }
+      } catch (e) {
+        console.error(`Failed to parse message from client ${clientId}:`, e)
+      }
+    })
+
+    ws.addEventListener('close', () => {
+      this.connections.delete(clientId)
+      this.count = Math.max(0, this.count - 1)
+      console.log(`WebSocket closed for client ${clientId}, remaining: ${this.count}`)
+      this.broadcast({ type: 'update', count: this.count })
+    })
+
+    ws.addEventListener('error', (event) => {
+      console.error(`WebSocket error for client ${clientId}:`, event)
+    })
+  }
+
+  broadcast(message: any) {
+    console.log(`Broadcasting to ${this.connections.size} clients:`, message)
+    for (const [clientId, ws] of this.connections) {
+      try {
+        ws.send(JSON.stringify(message))
+        console.log(`Message sent to client ${clientId}`)
+      } catch (e) {
+        console.error(`Error broadcasting to client ${clientId}:`, e)
+        this.connections.delete(clientId)
+        this.count = Math.max(0, this.count - 1)
+      }
+    }
+    if (this.count === 0) {
+      console.log(`No active connections, clearing state`)
+    }
+  }
 }

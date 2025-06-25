@@ -86,7 +86,7 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
         </div>
       </div>
 
-      <script src="/liveuser.js"></script>
+      <script src="/liveuser.js?siteId=official-website"></script>
       <script>
         {`
           // Display current site information
