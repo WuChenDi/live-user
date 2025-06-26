@@ -20,16 +20,14 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
                   Display the number of online users on your website in real-time, powered by WebSocket technology
                 </p>
               </div>
-              <div className="inline-flex items-center justify-center mb-4 sm:mb-0">
-                <div
-                  id="liveuser"
-                  className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white py-3 px-6 sm:py-4 sm:px-10 rounded-full font-semibold text-lg sm:text-xl lg:text-2xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 group"
-                >
-                  <span className="flex items-center gap-2 sm:gap-3">
-                    <span className="w-2 h-2 sm:w-3 sm:h-3 bg-white rounded-full animate-ping"></span>
-                    <span>Connecting...</span>
+              <div className="flex justify-center">
+                <div className="inline-flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-blue-50 via-white to-purple-50 rounded-full px-4 py-2 sm:px-6 sm:py-3 shadow-lg border border-white/60">
+                  <span className="text-base sm:text-lg font-medium text-gray-700">
+                    Online Users:
                   </span>
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-teal-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-pulse"></div>
+                  <span id="liveuser" className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                    Connecting...
+                  </span>
                 </div>
               </div>
             </div>

@@ -14,14 +14,18 @@ function initializeLiveUser(config) {
 
   function log(message) {
     if (config.debug) {
-      console.log('[LiveUser]', message, Array.prototype.slice.call(arguments, 1));
+      console.log(
+        '%c LiveUser %c ' + message,
+        'padding: 2px 1px; border-radius: 3px; color: #fff; background: #5584ff; font-weight: bold;',
+        'padding: 2px 1px; border-radius: 0 3px 3px 0;',
+      );
     }
   }
 
   function updateDisplay(count) {
     if (element) {
       log('Updating DOM with count:', count);
-      element.textContent = 'Online: ' + count + ' users';
+      element.textContent = count;
     } else {
       log('Error: Display element not found for ID:', config.displayElementId);
     }
