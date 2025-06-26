@@ -8,74 +8,161 @@ interface HomePageProps {
 export const HomePage: FC<HomePageProps> = ({ url }) => {
   return (
     <Layout>
-      <div className="bg-white rounded-2xl shadow-xl p-10 text-center space-y-8">
-        <div>
-          <div
-            id="liveuser"
-            className="bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 px-8 rounded-full font-semibold text-xl inline-block transition-all duration-300 hover:shadow-md"
-          >
-            Connecting...
+      <div className="bg-gradient-to-br via-white to-indigo-50 py-4 px-4 sm:py-8 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl border border-white/30 overflow-hidden">
+            <div className="p-6 sm:p-8 lg:p-12 text-center">
+              <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3 sm:mb-4">
+                  🚀 LiveUser Real-time Statistics
+                </h1>
+                <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                  Display the number of online users on your website in real-time, powered by WebSocket technology
+                </p>
+              </div>
+              <div className="inline-flex items-center justify-center mb-4 sm:mb-0">
+                <div
+                  id="liveuser"
+                  className="relative bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white py-3 px-6 sm:py-4 sm:px-10 rounded-full font-semibold text-lg sm:text-xl lg:text-2xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 group"
+                >
+                  <span className="flex items-center gap-2 sm:gap-3">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 bg-white rounded-full animate-ping"></span>
+                    <span>Connecting...</span>
+                  </span>
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-teal-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-blue-50 p-8 rounded-xl border-l-4 border-blue-600 space-y-4">
-          <h3 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            <span>📊</span> Real-time User Statistics
-          </h3>
-          <p className="text-gray-600 leading-relaxed">
-            This tool displays the number of online users on your website in real-time, powered by WebSocket technology.
-          </p>
-        </div>
+          <div className="grid gap-4 sm:gap-6 lg:gap-8 md:grid-cols-1 lg:grid-cols-1">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-blue-100 hover:shadow-xl transition-all duration-300 overflow-hidden group">
+              <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center text-white text-lg sm:text-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+                    🔧
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                    How to Use
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  Add the following code to your webpage to integrate the LiveUser counter:
+                </p>
+                <div className="bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
+                    <span className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">HTML</span>
+                  </div>
+                  <pre className="p-4 sm:p-6 text-xs sm:text-sm font-mono text-gray-800 overflow-x-auto whitespace-pre-wrap break-all sm:break-normal">
+                    {`<div id="liveuser">Loading...</div>`} <br />
+                    {`<script src="${url}/liveuser.js"></script>`}
+                  </pre>
+                </div>
+              </div>
+            </div>
 
-        <div className="bg-blue-50 p-8 rounded-xl border-l-4 border-blue-600 space-y-4">
-          <h3 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            <span>🔧</span> How to Use
-          </h3>
-          <p className="text-gray-600 leading-relaxed">
-            Add the following code to your webpage to integrate the LiveUser counter:
-          </p>
-          <pre className="bg-gray-100 p-4 rounded-lg text-left font-mono text-sm text-gray-800 border border-gray-200 overflow-x-auto shadow-sm">
-            {`<div id="liveuser">Loading...</div>\n<script src="${url}/liveuser.js"></script>`}
-          </pre>
-        </div>
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-purple-100 hover:shadow-xl transition-all duration-300 overflow-hidden group">
+              <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white text-lg sm:text-xl shadow-md group-hover:scale-110 transition-transform duration-300">
+                    ⚙️
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800">
+                    Customization Options
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  Customize the LiveUser counter by adding query parameters to the script URL:
+                </p>
 
-        <div className="bg-blue-50 p-8 rounded-xl border-l-4 border-blue-600 space-y-4">
-          <h3 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-            <span>⚙️</span> Customization Options
-          </h3>
-          <p className="text-gray-600 leading-relaxed">
-            Customize the LiveUser counter by adding query parameters to the script URL:
-          </p>
-          <pre className="bg-gray-100 p-4 rounded-lg text-left font-mono text-sm text-gray-800 border border-gray-200 overflow-x-auto shadow-sm">
-            {`<script src="${url}/liveuser.js?siteId=your-site&displayElementId=custom-id&debug=true"></script>`}
-          </pre>
-          <div className="space-y-3 text-left text-gray-700">
-            <h4 className="text-lg font-semibold text-gray-800">Available Parameters:</h4>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong className="font-medium">serverUrl</strong>: WebSocket server URL
-                <span className="text-gray-500"> (default: auto-detected from current protocol and host)</span>
-              </li>
-              <li>
-                <strong className="font-medium">siteId</strong>: Site identifier
-                <span className="text-gray-500"> (default: current domain or 'default-site')</span>
-              </li>
-              <li>
-                <strong className="font-medium">displayElementId</strong>: Element ID for displaying user count
-                <span className="text-gray-500"> (default: 'liveuser')</span>
-              </li>
-              <li>
-                <strong className="font-medium">reconnectDelay</strong>: Reconnect delay in milliseconds
-                <span className="text-gray-500"> (default: 3000)</span>
-              </li>
-              <li>
-                <strong className="font-medium">debug</strong>: Enable debug logging
-                <span className="text-gray-500"> (default: true)</span>
-              </li>
-            </ul>
+                <div className="bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
+                    <span className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">HTML with Parameters</span>
+                  </div>
+                  <pre className="p-4 sm:p-6 text-xs sm:text-sm font-mono text-gray-800 overflow-x-auto whitespace-pre-wrap break-all sm:break-normal">
+                    {`<script src="${url}/liveuser.js?siteId=your-site&displayElementId=custom-id&debug=true"></script>`}
+                  </pre>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    Available Parameters:
+                  </h4>
+                  <div className="grid gap-3 sm:gap-4">
+                    {[
+                      {
+                        name: 'serverUrl',
+                        desc: 'WebSocket server URL',
+                        default: 'auto-detected from current protocol and host'
+                      },
+                      {
+                        name: 'siteId',
+                        desc: 'Site identifier',
+                        default: "current domain or 'default-site'"
+                      },
+                      {
+                        name: 'displayElementId',
+                        desc: 'Element ID for displaying user count',
+                        default: "'liveuser'"
+                      },
+                      {
+                        name: 'reconnectDelay',
+                        desc: 'Reconnect delay in milliseconds',
+                        default: '3000'
+                      },
+                      {
+                        name: 'debug',
+                        desc: 'Enable debug logging',
+                        default: 'true'
+                      }
+                    ].map((param, index) => (
+                      <div key={index} className="bg-gradient-to-r from-gray-50 to-white p-3 sm:p-4 rounded-lg border border-gray-100 hover:border-purple-200 transition-colors duration-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                          <code className="text-sm sm:text-base font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                            {param.name}
+                          </code>
+                          <span className="text-xs sm:text-sm text-gray-600 flex-1">
+                            {param.desc}
+                          </span>
+                        </div>
+                        <div className="mt-1 sm:mt-2 text-xs text-gray-500">
+                          Default: <code className="bg-gray-100 px-1 rounded">{param.default}</code>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+              <div className="bg-white/95 backdrop-blur-sm m-1 rounded-lg sm:rounded-xl p-6 sm:p-8">
+                <div className="text-center space-y-4 sm:space-y-6">
+                  <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    ✨ Key Features
+                  </h3>
+                  <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      { icon: '⚡', title: 'Real-time', desc: 'Instant updates' },
+                      { icon: '🔄', title: 'Auto Reconnect', desc: 'Never miss a beat' },
+                      { icon: '🎨', title: 'Customizable', desc: 'Fits your design' },
+                      { icon: '📱', title: 'Responsive', desc: 'Works everywhere' }
+                    ].map((feature, index) => (
+                      <div key={index} className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+                        <div className="text-lg sm:text-xl mb-1 sm:mb-2">{feature.icon}</div>
+                        <div className="text-sm sm:text-base font-semibold text-gray-800 mb-1">{feature.title}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">{feature.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
       <script src="/liveuser.js?siteId=official-website"></script>
     </Layout>
   );
