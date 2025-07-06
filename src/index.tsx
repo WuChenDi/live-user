@@ -3,15 +3,15 @@ import { HomePage } from './HomePage'
 
 interface JSConfig {
   /**
-   * WebSocket server URL (default: auto-detected)
+   * WebSocket server URL (default: auto-detected from current protocol and host)
    */
   serverUrl: string;
   /**
-   * Site identifier (default: current domain)
+   * Site identifier (default: 'default-site')
    */
   siteId: string;
   /**
-   * Element ID for display (default: 'liveuser')
+   * Element ID for displaying user count (default: 'liveuser')
    */
   displayElementId: string;
   /**
@@ -19,9 +19,13 @@ interface JSConfig {
    */
   reconnectDelay: number;
   /**
-   * Debug mode toggle (default: true)
+   * Enable debug logging (default: false)
    */
   debug: boolean;
+  /**
+   * Base URL for loading additional scripts
+   */
+  baseUrl: string;
 }
 
 interface Env {
@@ -37,20 +41,9 @@ function parseJSConfig(c: any): JSConfig {
 
   const protocol = url.protocol === 'https:' ? 'wss' : 'ws'
   const defaultServerUrl = `${protocol}://${url.host}/`
+  const baseUrl = `${url.protocol}//${url.host}`
 
   let siteId = query.siteId || ''
-
-  if (!siteId) {
-    const referer = c.req.header('Referer')
-    if (referer) {
-      try {
-        const refererUrl = new URL(referer)
-        siteId = refererUrl.host
-      } catch (e) {
-        // Ignore
-      }
-    }
-  }
 
   if (!siteId) {
     siteId = 'default-site'
@@ -61,7 +54,8 @@ function parseJSConfig(c: any): JSConfig {
     siteId,
     displayElementId: query.displayElementId || 'liveuser',
     reconnectDelay: Number.parseInt(query.reconnectDelay) || 3000,
-    debug: query.debug === undefined ? true : query.debug === 'true'
+    debug: query.debug === 'true',
+    baseUrl: query.baseUrl || baseUrl
   }
 }
 
@@ -83,7 +77,7 @@ app.get('/liveuser.js', (c) => {
     (function() {
       var config = ${JSON.stringify(config)};
       var script = document.createElement('script');
-      script.src = '/init-liveuser.js';
+      script.src = config.baseUrl + '/init-liveuser.js';
       script.async = true;
       script.onload = function() {
         if (window.LiveUser && window.LiveUser.initializeLiveUser) {
@@ -93,7 +87,7 @@ app.get('/liveuser.js', (c) => {
         }
       };
       script.onerror = function() {
-        console.error('Failed to load liveuser.js');
+        console.error('Failed to load init-liveuser.js from ' + config.baseUrl);
       };
       document.head.appendChild(script);
     })();
@@ -101,6 +95,9 @@ app.get('/liveuser.js', (c) => {
 
   c.header('Content-Type', 'application/javascript; charset=utf-8')
   c.header('Cache-Control', 'no-cache')
+  c.header('Access-Control-Allow-Origin', '*')
+  c.header('Access-Control-Allow-Methods', 'GET')
+  c.header('Access-Control-Allow-Headers', 'Content-Type')
   return c.text(jsCode)
 })
 

@@ -112,7 +112,7 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
                       {
                         name: 'debug',
                         desc: 'Enable debug logging',
-                        default: 'true'
+                        default: 'false'
                       }
                     ].map((param, index) => (
                       <div key={index} className="bg-gradient-to-r from-gray-50 to-white p-3 sm:p-4 rounded-lg border border-gray-100 hover:border-purple-200 transition-colors duration-200">

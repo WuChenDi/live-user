@@ -75,7 +75,7 @@ Customize the script loader via query parameters:
 | `serverUrl`        | Full WebSocket server URL             | Auto-detected    |
 | `displayElementId` | DOM element ID to show the user count | `'liveuser'`     |
 | `reconnectDelay`   | Delay before reconnecting (in ms)     | `3000`           |
-| `debug`            | Enable debug logs in console          | `true`           |
+| `debug`            | Enable debug logs in console          | `false`          |
 
 ### Example with Custom ID and Debug Mode:
 
