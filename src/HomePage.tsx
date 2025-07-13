@@ -29,6 +29,15 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
                     Connecting...
                   </span>
                 </div>
+
+                <div className="inline-flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-green-50 via-white to-emerald-50 rounded-full px-4 py-2 sm:px-6 sm:py-3 shadow-lg border border-white/60">
+                  <span className="text-base sm:text-lg font-medium text-gray-700">
+                    📊 Total Visits:
+                  </span>
+                  <span id="liveuser_totalvisits" className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
+                    Loading...
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -105,6 +114,11 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
                         default: "'liveuser'"
                       },
                       {
+                        name: 'totalCountElementId',
+                        desc: 'Element ID for displaying total visit count',
+                        default: "'liveuser_totalvisits'"
+                      },
+                      {
                         name: 'reconnectDelay',
                         desc: 'Reconnect delay in milliseconds',
                         default: '3000'
@@ -112,6 +126,16 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
                       {
                         name: 'debug',
                         desc: 'Enable debug logging',
+                        default: 'false'
+                      },
+                      {
+                        name: 'baseUrl',
+                        desc: 'Base URL for loading additional scripts',
+                        default: 'current protocol and host'
+                      },
+                      {
+                        name: 'enableTotalCount',
+                        desc: 'Enable total visit count tracking',
                         default: 'false'
                       }
                     ].map((param, index) => (
@@ -161,7 +185,7 @@ export const HomePage: FC<HomePageProps> = ({ url }) => {
         </div>
       </div>
 
-      <script src="/liveuser.js?siteId=official-website"></script>
+      <script src="/liveuser.js?siteId=official-website&enableTotalCount=true&debug=true"></script>
     </Layout>
   );
 };
