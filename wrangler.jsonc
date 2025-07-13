@@ -9,12 +9,13 @@
   "assets": {
     "directory": "public"
   },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
+  "kv_namespaces": [
+    {
+      "binding": "LIVE_USER_VISIT_COUNTER",
+      "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "preview_id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
