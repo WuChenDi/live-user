@@ -154,7 +154,6 @@ app.get('/ws', async (c) => {
 
 // // Status query endpoint
 // app.get('/api/status', async (c) => {
-//   // 可以返回所有站点的统计信息
 //   return c.json({
 //     message: 'LiveUser API is running',
 //     timestamp: new Date().toISOString(),
