@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { HomePage } from './HomePage'
 
 interface JSConfig {
@@ -35,7 +35,7 @@ interface Env {
 const app = new Hono<{ Bindings: Env }>()
 
 // Parse JS configuration
-function parseJSConfig(c: any): JSConfig {
+function parseJSConfig(c: Context): JSConfig {
   const query = c.req.query()
   const url = new URL(c.req.url)
 
@@ -43,17 +43,11 @@ function parseJSConfig(c: any): JSConfig {
   const defaultServerUrl = `${protocol}://${url.host}/`
   const baseUrl = `${url.protocol}//${url.host}`
 
-  let siteId = query.siteId || ''
-
-  if (!siteId) {
-    siteId = 'default-site'
-  }
-
   return {
     serverUrl: query.serverUrl || defaultServerUrl,
-    siteId,
+    siteId: query.siteId || 'default-site',
     displayElementId: query.displayElementId || 'liveuser',
-    reconnectDelay: Number.parseInt(query.reconnectDelay) || 3000,
+    reconnectDelay: query.reconnectDelay ? Number.parseInt(query.reconnectDelay) : 3000,
     debug: query.debug === 'true',
     baseUrl: query.baseUrl || baseUrl
   }
