@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "live-user",
   "main": "src/index.tsx",
-  "compatibility_date": "2025-06-25",
+  "compatibility_date": "2025-11-03",
   "compatibility_flags": [
     "nodejs_compat"
   ],

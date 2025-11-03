@@ -11,17 +11,17 @@
   },
   "module": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --ip 0.0.0.0 --port 3000",
     "deploy": "wrangler deploy --minify",
     "build": "bun build src/index.tsx --outdir dist --target browser",
     "clean": "bash ./scripts/clean.sh",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.10.3"
+    "hono": "^4.10.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251014.0",
-    "wrangler": "^4.45.0"
+    "wrangler": "^4.45.3"
   }
 }
