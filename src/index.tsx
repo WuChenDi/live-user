@@ -1,4 +1,6 @@
 import { Hono, type Context } from 'hono'
+import { logger } from 'hono/logger'
+import { requestId } from 'hono/request-id'
 import { HomePage } from './HomePage'
 
 interface JSConfig {
@@ -42,6 +44,9 @@ interface Env {
 }
 
 const app = new Hono<{ Bindings: Env }>()
+
+app.use(logger())
+app.use('*', requestId())
 
 // Parse JS configuration
 function parseJSConfig(c: Context): JSConfig {
