@@ -1,5 +1,10 @@
 # LiveUser · Real-Time Online User Counter
 
+docs(README): add repository migration warning
+
+> [!WARNING]
+> This repository has been moved to: [live-user](https://github.com/WuChenDi/projects/tree/main/apps/live-user)
+
 LiveUser is a lightweight JavaScript widget and WebSocket server that displays real-time online user count and total visit statistics on any webpage. Built with **Hono**, **Durable Objects**, **KV Storage**, and **TailwindCSS**, it's perfect for showcasing live user presence on marketing pages, dashboards, or product sites.
 
 ## 🚀 Features
