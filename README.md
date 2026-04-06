@@ -1,7 +1,5 @@
 # LiveUser · Real-Time Online User Counter
 
-docs(README): add repository migration warning
-
 > [!WARNING]
 > This repository has been moved to: [live-user](https://github.com/WuChenDi/projects/tree/main/apps/live-user)
 
